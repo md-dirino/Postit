@@ -101,3 +101,22 @@ header {
 .color-3 { background-color: #a5d6a7; /* Verde claro */ }
 .color-4 { background-color: #ffab91; /* Laranja claro */ }
 .color-5 { background-color: #ce93d8; /* Roxo claro */ }
+
+/* Estilo para o feedback de salvamento */
+.save-feedback {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.save-feedback.show {
+    opacity: 1;
+}

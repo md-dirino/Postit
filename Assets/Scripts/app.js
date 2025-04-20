@@ -8,12 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentY;
     let xOffset = 0;
     let yOffset = 0;
+    let saveTimeout;
+    
+    // Criar elemento para feedback de salvamento
+    const saveFeedback = document.createElement('div');
+    saveFeedback.classList.add('save-feedback');
+    saveFeedback.textContent = 'Alterações salvas com sucesso!';
+    document.body.appendChild(saveFeedback);
     
     // Carregar os post-its salvos no localStorage
     loadPostits();
     
     // Adicionar evento para criar novo post-it
-    newPostitBtn.addEventListener('click', createNewPostit);
+    newPostitBtn.addEventListener('click', () => {
+        createNewPostit();
+    });
     
     // Função para criar um novo post-it
     function createNewPostit(content = '', x = 50, y = 50, id = Date.now().toString()) {
@@ -29,11 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="postit-header">
                 <button class="delete-btn" title="Excluir">✕</button>
             </div>
-            <textarea class="postit-content" placeholder="Digite seu texto aqui...">${content}</textarea>
+            <textarea class="postit-content" placeholder="Escreva o que quiser aqui"></textarea>
         `;
         
         // Adicionar post-it ao board
         board.appendChild(postit);
+        
+        // Se tiver conteúdo, preencher textarea
+        const textarea = postit.querySelector('.postit-content');
+        if (content) {
+            textarea.value = content;
+        }
         
         // Configurar evento para exclusão
         postit.querySelector('.delete-btn').addEventListener('click', () => {
@@ -45,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.addEventListener('touchstart', dragStart, { passive: false });
         
         // Evento para salvar texto ao digitar
-        const textarea = postit.querySelector('.postit-content');
         textarea.addEventListener('input', () => {
             savePostits();
         });
@@ -156,7 +170,20 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.style.zIndex = maxZIndex + 1;
     }
     
-    // Salvar post-its no localStorage
+    // Exibir feedback de salvamento
+    function showSaveFeedback() {
+        saveFeedback.classList.add('show');
+        
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+        
+        saveTimeout = setTimeout(() => {
+            saveFeedback.classList.remove('show');
+        }, 2000); // O feedback fica visível por 2 segundos
+    }
+    
+    // Salvar post-its no localStorage com feedback
     function savePostits() {
         const postits = document.querySelectorAll('.postit');
         const postitData = [];
@@ -173,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         localStorage.setItem('postits', JSON.stringify(postitData));
+        showSaveFeedback();
     }
     
     // Obter classe de cor do post-it
