@@ -92,12 +92,36 @@ document.addEventListener('DOMContentLoaded', () => {
         
         colorBtn.addEventListener('click', (e) => {
             e.stopPropagation();
+            
+            // Fechar outras paletas que possam estar abertas
+            document.querySelectorAll('.color-options.show').forEach(menu => {
+                if (menu !== colorOptions) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Alternar visibilidade da paleta atual
             colorOptions.classList.toggle('show');
+            
+            // Garantir que a paleta esteja visível
+            if (colorOptions.classList.contains('show')) {
+                // Certificar de que está visível
+                colorOptions.style.visibility = 'visible';
+                colorOptions.style.opacity = '1';
+                
+                // Posicionar corretamente
+                const btnRect = colorBtn.getBoundingClientRect();
+                colorOptions.style.top = '100%';
+                colorOptions.style.right = '-10px';
+                
+                // Garantir que aparece acima de tudo
+                colorOptions.style.zIndex = '300';
+            }
         });
         
         // Fechar o seletor de cores ao clicar fora
         document.addEventListener('click', () => {
-            document.querySelectorAll('.color-options').forEach(menu => {
+            document.querySelectorAll('.color-options.show').forEach(menu => {
                 menu.classList.remove('show');
             });
         });
@@ -107,16 +131,21 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
         });
         
-        // Configurar opções de cores
+        // Configurar opções de cores - Solução definitiva para o problema de mudança de posição
         const colorOptionElements = postit.querySelectorAll('.color-option');
         colorOptionElements.forEach(option => {
             option.addEventListener('click', () => {
                 const newColor = option.getAttribute('data-color');
                 
-                // Guardar posição e dimensões exatas antes de mudar a cor
-                const rect = postit.getBoundingClientRect();
-                const currentStyle = window.getComputedStyle(postit);
-                const currentZIndex = currentStyle.zIndex;
+                // Capturar todas as propriedades de estilo e posição ANTES de qualquer alteração
+                const computedStyle = window.getComputedStyle(postit);
+                const left = computedStyle.left;
+                const top = computedStyle.top;
+                const width = computedStyle.width;
+                const height = computedStyle.height;
+                const zIndex = computedStyle.zIndex;
+                
+                // Não usar mais o clone temporário que estava causando problemas na paleta
                 
                 // Remover classes de cor existentes
                 for (let i = 1; i <= 5; i++) {
@@ -126,12 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Adicionar a nova classe de cor
                 postit.classList.add(newColor);
                 
-                // Garantir que as dimensões e posições permaneçam idênticas
-                postit.style.left = `${rect.left}px`;
-                postit.style.top = `${rect.top}px`;
-                postit.style.width = `${rect.width}px`;
-                postit.style.height = `${rect.height}px`;
-                postit.style.zIndex = currentZIndex;
+                // Aplicar EXPLICITAMENTE todas as propriedades de posição e dimensões novamente
+                postit.style.position = 'absolute'; // Forçar posição absoluta
+                postit.style.left = left;
+                postit.style.top = top;
+                postit.style.width = width;
+                postit.style.height = height;
+                postit.style.zIndex = zIndex;
                 
                 // Salvar alterações
                 savePostits();

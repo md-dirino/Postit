@@ -100,6 +100,7 @@ header {
 .color-picker {
     position: relative;
     display: inline-block;
+    z-index: 200; /* Aumentando o z-index para garantir que apareça acima de tudo */
 }
 
 .color-btn {
@@ -124,13 +125,15 @@ header {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 5px;
     display: none;
-    z-index: 100; /* Aumentado o z-index */
+    z-index: 200; /* Aumentado o z-index */
     flex-wrap: wrap;
-    width: 100px;
+    width: 120px; /* Aumentando a largura */
+    visibility: visible !important; /* Forçando visibilidade */
+    opacity: 1 !important; /* Garantindo que seja visível */
 }
 
 .color-options.show {
-    display: flex;
+    display: flex !important; /* Garantindo que seja exibido */
 }
 
 .color-option {
@@ -181,6 +184,14 @@ header {
 }
 
 /* Cores variadas para os post-its */
+.color-1, 
+.color-2, 
+.color-3, 
+.color-4, 
+.color-5 {
+    position: absolute; /* Garantir que a posição absoluta é mantida */
+}
+
 .color-1 { background-color: #ffeb3b; /* Amarelo */ }
 .color-2 { background-color: #81d4fa; /* Azul claro */ }
 .color-3 { background-color: #a5d6a7; /* Verde claro */ }
