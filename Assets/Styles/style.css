@@ -183,19 +183,19 @@ header {
 }
 
 /* Cores variadas para os post-its */
-.color-1, 
-.color-2, 
-.color-3, 
-.color-4, 
-.color-5 {
-    position: absolute; /* Garantir que a posição absoluta é mantida */
+.postit.color-1,
+.postit.color-2,
+.postit.color-3,
+.postit.color-4,
+.postit.color-5 {
+    position: absolute; /* Garantir que a posição absoluta é mantida no post-it */
 }
 
-.color-1 { background-color: #ffeb3b; /* Amarelo */ }
-.color-2 { background-color: #81d4fa; /* Azul claro */ }
-.color-3 { background-color: #a5d6a7; /* Verde claro */ }
-.color-4 { background-color: #ffab91; /* Laranja claro */ }
-.color-5 { background-color: #ce93d8; /* Roxo claro */ }
+.postit.color-1 { background-color: #ffeb3b; /* Amarelo */ }
+.postit.color-2 { background-color: #81d4fa; /* Azul claro */ }
+.postit.color-3 { background-color: #a5d6a7; /* Verde claro */ }
+.postit.color-4 { background-color: #ffab91; /* Laranja claro */ }
+.postit.color-5 { background-color: #ce93d8; /* Roxo claro */ }
 
 /* Estilo para o feedback de salvamento */
 .save-feedback {
