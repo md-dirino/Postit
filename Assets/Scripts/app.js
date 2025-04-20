@@ -44,6 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.style.width = `${width}px`;
         postit.style.height = `${height}px`;
         
+        // Garantir que o novo post-it seja posicionado à frente dos outros
+        const allPostits = document.querySelectorAll('.postit');
+        let maxZIndex = 1;
+        
+        // Encontrar o maior z-index atual
+        allPostits.forEach(p => {
+            const zIndex = parseInt(p.style.zIndex || 1);
+            if (zIndex > maxZIndex) maxZIndex = zIndex;
+        });
+        
+        // Definir o z-index do novo post-it para o maior + 1
+        postit.style.zIndex = maxZIndex + 1;
+        
         // Estrutura interna do post-it com título e seletor de cores - Reordenado os elementos
         postit.innerHTML = `
             <div class="postit-header">
@@ -86,53 +99,60 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.addEventListener('mousedown', dragStart);
         postit.addEventListener('touchstart', dragStart, { passive: false });
         
-        // Configurar seletor de cores
+        // Configurar seletor de cores com posicionamento melhorado
         const colorBtn = postit.querySelector('.color-btn');
         const colorOptions = postit.querySelector('.color-options');
         
         colorBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             
-            // Fechar outras paletas que possam estar abertas
+            // Fechar todas as outras paletas de cores
             document.querySelectorAll('.color-options.show').forEach(menu => {
-                if (menu !== colorOptions) {
-                    menu.classList.remove('show');
-                }
+                menu.classList.remove('show');
             });
             
-            // Alternar visibilidade da paleta atual
+            // Posicionar a paleta ACIMA do post-it
+            const btnRect = colorBtn.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+            
+            // Remover a paleta de cores do post-it e adicioná-la diretamente ao body
+            // para evitar problemas de posicionamento e overflow
+            if (!colorOptions.parentElement.isEqualNode(document.body)) {
+                // Salvar a referência ao post-it original na paleta
+                colorOptions.setAttribute('data-postit-id', postit.getAttribute('data-id'));
+                document.body.appendChild(colorOptions);
+            }
+            
+            // Posicionar acima do post-it
+            colorOptions.style.position = 'fixed';
+            colorOptions.style.left = `${btnRect.left}px`;
+            colorOptions.style.top = `${btnRect.top - 50}px`; // 50px acima do botão
+            
+            // Mostrar a paleta
             colorOptions.classList.toggle('show');
             
-            // Garantir que a paleta esteja visível
-            if (colorOptions.classList.contains('show')) {
-                // Certificar de que está visível
-                colorOptions.style.visibility = 'visible';
-                colorOptions.style.opacity = '1';
-                
-                // Posicionar corretamente
-                const btnRect = colorBtn.getBoundingClientRect();
-                colorOptions.style.top = '100%';
-                colorOptions.style.right = '-10px';
-                
-                // Garantir que aparece acima de tudo
-                colorOptions.style.zIndex = '300';
+            // Ajuste adicional para garantir que a paleta fique totalmente visível
+            const colorOptionsRect = colorOptions.getBoundingClientRect();
+            if (colorOptionsRect.right > window.innerWidth) {
+                colorOptions.style.left = `${window.innerWidth - colorOptionsRect.width - 10}px`;
+            }
+            if (colorOptionsRect.top < 0) {
+                colorOptions.style.top = '10px'; // Garantir que não fique fora da tela
             }
         });
         
         // Fechar o seletor de cores ao clicar fora
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.color-options.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        });
-        
-        // Impedir que cliques no seletor de cores fechem o menu
-        colorOptions.addEventListener('click', (e) => {
-            e.stopPropagation();
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.color-btn') && !e.target.closest('.color-options')) {
+                document.querySelectorAll('.color-options.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
         });
         
         // Configurar opções de cores - Solução definitiva para o problema de mudança de posição
-        const colorOptionElements = postit.querySelectorAll('.color-option');
+        const colorOptionElements = colorOptions.querySelectorAll('.color-option');
         colorOptionElements.forEach(option => {
             option.addEventListener('click', () => {
                 const newColor = option.getAttribute('data-color');
@@ -145,8 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const height = computedStyle.height;
                 const zIndex = computedStyle.zIndex;
                 
-                // Não usar mais o clone temporário que estava causando problemas na paleta
-                
                 // Remover classes de cor existentes
                 for (let i = 1; i <= 5; i++) {
                     postit.classList.remove(`color-${i}`);
@@ -156,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 postit.classList.add(newColor);
                 
                 // Aplicar EXPLICITAMENTE todas as propriedades de posição e dimensões novamente
-                postit.style.position = 'absolute'; // Forçar posição absoluta
+                postit.style.position = 'absolute';
                 postit.style.left = left;
                 postit.style.top = top;
                 postit.style.width = width;

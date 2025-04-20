@@ -100,7 +100,7 @@ header {
 .color-picker {
     position: relative;
     display: inline-block;
-    z-index: 200; /* Aumentando o z-index para garantir que apareça acima de tudo */
+    z-index: 200;
 }
 
 .color-btn {
@@ -117,36 +117,35 @@ header {
 }
 
 .color-options {
-    position: absolute;
-    top: 100%;
-    right: -10px; /* Ajustado para ficar mais à direita */
+    position: fixed; /* Alterado para fixed para posicionar em relação à viewport */
     background-color: white;
     border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 10px;
     display: none;
-    z-index: 200; /* Aumentado o z-index */
-    flex-wrap: wrap;
-    width: 120px; /* Aumentando a largura */
-    visibility: visible !important; /* Forçando visibilidade */
-    opacity: 1 !important; /* Garantindo que seja visível */
+    z-index: 9999; /* Valor muito alto para garantir que fique acima de tudo */
+    width: 120px;
+    visibility: visible;
 }
 
 .color-options.show {
-    display: flex !important; /* Garantindo que seja exibido */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
 
 .color-option {
-    width: 20px;
-    height: 20px;
-    margin: 3px;
+    width: 25px;
+    height: 25px;
+    margin: 4px;
     border-radius: 50%;
     cursor: pointer;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
 .color-option:hover {
-    transform: scale(1.1);
+    transform: scale(1.2);
+    border-color: rgba(0, 0, 0, 0.3);
 }
 
 .color-option.color-1 { background-color: #ffeb3b; /* Amarelo */ }
