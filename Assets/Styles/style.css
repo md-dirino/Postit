@@ -66,9 +66,84 @@ header {
 
 .postit-header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     margin-bottom: 10px;
+    align-items: center;
 }
+
+.postit-title {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    outline: none;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.postit-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.color-picker {
+    position: relative;
+    display: inline-block;
+}
+
+.color-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-options {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    display: none;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    width: 100px;
+}
+
+.color-options.show {
+    display: flex;
+}
+
+.color-option {
+    width: 20px;
+    height: 20px;
+    margin: 3px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+}
+
+.color-option.color-1 { background-color: #ffeb3b; /* Amarelo */ }
+.color-option.color-2 { background-color: #81d4fa; /* Azul claro */ }
+.color-option.color-3 { background-color: #a5d6a7; /* Verde claro */ }
+.color-option.color-4 { background-color: #ffab91; /* Laranja claro */ }
+.color-option.color-5 { background-color: #ce93d8; /* Roxo claro */ }
 
 .postit-content {
     width: 100%;

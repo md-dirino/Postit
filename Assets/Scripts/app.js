@@ -25,30 +25,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Função para criar um novo post-it
-    function createNewPostit(content = '', x = 50, y = 50, id = Date.now().toString()) {
-        const colorClass = `color-${Math.floor(Math.random() * 5) + 1}`;
+    function createNewPostit(
+        content = '', 
+        x = 50, 
+        y = 50, 
+        id = Date.now().toString(), 
+        title = '',
+        colorClass = `color-${Math.floor(Math.random() * 5) + 1}`
+    ) {
         const postit = document.createElement('div');
         postit.classList.add('postit', colorClass);
         postit.setAttribute('data-id', id);
         postit.style.left = `${x}px`;
         postit.style.top = `${y}px`;
         
-        // Estrutura interna do post-it
+        // Estrutura interna do post-it com título e seletor de cores
         postit.innerHTML = `
             <div class="postit-header">
-                <button class="delete-btn" title="Excluir">✕</button>
+                <div class="postit-actions">
+                    <div class="color-picker">
+                        <button class="color-btn" title="Mudar cor">🎨</button>
+                        <div class="color-options">
+                            <div class="color-option color-1" data-color="color-1"></div>
+                            <div class="color-option color-2" data-color="color-2"></div>
+                            <div class="color-option color-3" data-color="color-3"></div>
+                            <div class="color-option color-4" data-color="color-4"></div>
+                            <div class="color-option color-5" data-color="color-5"></div>
+                        </div>
+                    </div>
+                    <button class="delete-btn" title="Excluir">✕</button>
+                </div>
             </div>
-            <textarea class="postit-content" placeholder="Escreva o que quiser aqui"></textarea>
+            <input type="text" class="postit-title" placeholder="Título do post-it" value="${title}">
+            <textarea class="postit-content" placeholder="Escreva o que quiser aqui">${content}</textarea>
         `;
         
         // Adicionar post-it ao board
         board.appendChild(postit);
-        
-        // Se tiver conteúdo, preencher textarea
-        const textarea = postit.querySelector('.postit-content');
-        if (content) {
-            textarea.value = content;
-        }
         
         // Configurar evento para exclusão
         postit.querySelector('.delete-btn').addEventListener('click', () => {
@@ -59,7 +72,55 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.addEventListener('mousedown', dragStart);
         postit.addEventListener('touchstart', dragStart, { passive: false });
         
-        // Evento para salvar texto ao digitar
+        // Configurar seletor de cores
+        const colorBtn = postit.querySelector('.color-btn');
+        const colorOptions = postit.querySelector('.color-options');
+        
+        colorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            colorOptions.classList.toggle('show');
+        });
+        
+        // Fechar o seletor de cores ao clicar fora
+        document.addEventListener('click', () => {
+            colorOptions.classList.remove('show');
+        });
+        
+        // Impedir que cliques no seletor de cores fechem o menu
+        colorOptions.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Configurar opções de cores
+        const colorOptionElements = postit.querySelectorAll('.color-option');
+        colorOptionElements.forEach(option => {
+            option.addEventListener('click', () => {
+                const newColor = option.getAttribute('data-color');
+                
+                // Remover classes de cor existentes
+                for (let i = 1; i <= 5; i++) {
+                    postit.classList.remove(`color-${i}`);
+                }
+                
+                // Adicionar a nova classe de cor
+                postit.classList.add(newColor);
+                
+                // Salvar alterações
+                savePostits();
+                
+                // Fechar o seletor de cores
+                colorOptions.classList.remove('show');
+            });
+        });
+        
+        // Evento para salvar texto ao digitar no título
+        const titleInput = postit.querySelector('.postit-title');
+        titleInput.addEventListener('input', () => {
+            savePostits();
+        });
+        
+        // Evento para salvar texto ao digitar no conteúdo
+        const textarea = postit.querySelector('.postit-content');
         textarea.addEventListener('input', () => {
             savePostits();
         });
@@ -84,7 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funções para arrastar
     function dragStart(e) {
         if (e.target.classList.contains('postit-content') || 
-            e.target.classList.contains('delete-btn')) {
+            e.target.classList.contains('delete-btn') || 
+            e.target.classList.contains('postit-title')) {
             return;
         }
         
@@ -191,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postits.forEach(postit => {
             postitData.push({
                 id: postit.getAttribute('data-id'),
+                title: postit.querySelector('.postit-title').value,
                 content: postit.querySelector('.postit-content').value,
                 x: parseInt(postit.style.left),
                 y: parseInt(postit.style.top),
@@ -219,14 +282,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (savedPostits && savedPostits.length > 0) {
             savedPostits.forEach(data => {
-                const postit = createNewPostit(data.content, data.x, data.y, data.id);
+                const postit = createNewPostit(
+                    data.content, 
+                    data.x, 
+                    data.y, 
+                    data.id, 
+                    data.title || '', 
+                    data.color || 'color-1'
+                );
                 postit.style.zIndex = data.zIndex || 1;
-                
-                // Remover classes de cor existentes e adicionar a salva
-                for (let i = 1; i <= 5; i++) {
-                    postit.classList.remove(`color-${i}`);
-                }
-                postit.classList.add(data.color || 'color-1');
             });
         }
     }
