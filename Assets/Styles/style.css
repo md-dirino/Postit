@@ -59,14 +59,14 @@ header {
     min-height: 200px;
     min-width: 150px;
     padding: 15px;
+    padding-bottom: 25px; /* Aumentando o padding inferior para evitar texto cortado */
     background-color: #ffeb3b;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 2px;
     cursor: move;
     z-index: 1;
     transition: box-shadow 0.3s;
-    resize: both;
-    overflow: auto;
+    overflow: visible; /* Alterado para visible para mostrar a paleta de cores */
 }
 
 .postit:hover {
@@ -75,9 +75,8 @@ header {
 
 .postit-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: 10px;
-    align-items: center;
 }
 
 .postit-title {
@@ -119,14 +118,13 @@ header {
 .color-options {
     position: absolute;
     top: 100%;
-    right: 0;
+    right: -10px; /* Ajustado para ficar mais à direita */
     background-color: white;
     border-radius: 4px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 5px;
     display: none;
-    z-index: 10;
-    display: flex;
+    z-index: 100; /* Aumentado o z-index */
     flex-wrap: wrap;
     width: 100px;
 }
@@ -156,13 +154,16 @@ header {
 
 .postit-content {
     width: 100%;
-    height: calc(100% - 30px);
+    height: auto;
     border: none;
     background-color: transparent;
     resize: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 14px;
     outline: none;
+    overflow: hidden; /* Removido overflow scroll */
+    min-height: 100px; /* Altura mínima */
+    margin-bottom: 10px; /* Adicionando margem inferior */
 }
 
 .delete-btn {
@@ -188,21 +189,28 @@ header {
 
 /* Estilo para o feedback de salvamento */
 .save-feedback {
-    display: inline-block;
-    background-color: rgba(76, 175, 80, 0.9);
-    color: white;
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
     padding: 8px 15px;
     border-radius: 4px;
     font-size: 14px;
     transition: all 0.3s ease-in-out;
+    border-left: 3px solid #4CAF50;
+    font-weight: normal;
 }
 
 .save-feedback.saving {
-    background-color: rgba(255, 193, 7, 0.9);
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #FFC107;
+    border-left: 3px solid #FFC107;
 }
 
 .save-feedback.error {
-    background-color: rgba(244, 67, 54, 0.9);
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #F44336;
+    border-left: 3px solid #F44336;
 }
 
 /* Estilo para o alça de redimensionamento */

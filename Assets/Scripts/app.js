@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postit.style.width = `${width}px`;
         postit.style.height = `${height}px`;
         
-        // Estrutura interna do post-it com título e seletor de cores
+        // Estrutura interna do post-it com título e seletor de cores - Reordenado os elementos
         postit.innerHTML = `
             <div class="postit-header">
                 <div class="postit-actions">
@@ -68,6 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Adicionar post-it ao board
         board.appendChild(postit);
+        
+        // Configurações para auto-crescimento do textarea
+        const textarea = postit.querySelector('.postit-content');
+        autoResizeTextarea(textarea);
+        textarea.addEventListener('input', function() {
+            autoResizeTextarea(this);
+            savePostits();
+        });
         
         // Configurar evento para exclusão
         postit.querySelector('.delete-btn').addEventListener('click', () => {
@@ -105,11 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
             option.addEventListener('click', () => {
                 const newColor = option.getAttribute('data-color');
                 
-                // Salvar posição atual
-                const currentLeft = postit.style.left;
-                const currentTop = postit.style.top;
-                const currentWidth = postit.style.width;
-                const currentHeight = postit.style.height;
+                // Guardar posição e dimensões exatas antes de mudar a cor
+                const rect = postit.getBoundingClientRect();
+                const currentStyle = window.getComputedStyle(postit);
+                const currentZIndex = currentStyle.zIndex;
                 
                 // Remover classes de cor existentes
                 for (let i = 1; i <= 5; i++) {
@@ -119,11 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Adicionar a nova classe de cor
                 postit.classList.add(newColor);
                 
-                // Restaurar posição original
-                postit.style.left = currentLeft;
-                postit.style.top = currentTop;
-                postit.style.width = currentWidth;
-                postit.style.height = currentHeight;
+                // Garantir que as dimensões e posições permaneçam idênticas
+                postit.style.left = `${rect.left}px`;
+                postit.style.top = `${rect.top}px`;
+                postit.style.width = `${rect.width}px`;
+                postit.style.height = `${rect.height}px`;
+                postit.style.zIndex = currentZIndex;
                 
                 // Salvar alterações
                 savePostits();
@@ -136,12 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Evento para salvar texto ao digitar no título
         const titleInput = postit.querySelector('.postit-title');
         titleInput.addEventListener('input', () => {
-            savePostits();
-        });
-        
-        // Evento para salvar texto ao digitar no conteúdo
-        const textarea = postit.querySelector('.postit-content');
-        textarea.addEventListener('input', () => {
             savePostits();
         });
         
@@ -160,6 +162,30 @@ document.addEventListener('DOMContentLoaded', () => {
         savePostits();
         
         return postit;
+    }
+    
+    // Função para auto-redimensionar o textarea
+    function autoResizeTextarea(textarea) {
+        // Reset height para calcular corretamente
+        textarea.style.height = 'auto';
+        
+        // Definir a nova altura baseada no conteúdo
+        const newHeight = Math.max(100, textarea.scrollHeight + 10); // Adicionando mais 10px para evitar corte
+        textarea.style.height = newHeight + 'px';
+        
+        // Ajustar altura do post-it para acomodar o textarea
+        const postit = textarea.closest('.postit');
+        const titleHeight = postit.querySelector('.postit-title').offsetHeight;
+        const headerHeight = postit.querySelector('.postit-header').offsetHeight;
+        const padding = 40; // Aumentado o padding para garantir espaço suficiente
+        
+        const minHeight = newHeight + titleHeight + headerHeight + padding;
+        
+        // Só ajusta se a nova altura calculada for maior que a altura atual
+        const currentHeight = parseInt(getComputedStyle(postit).height);
+        if (minHeight > currentHeight) {
+            postit.style.height = minHeight + 'px';
+        }
     }
     
     // Iniciar redimensionamento
@@ -183,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Realizar redimensionamento durante o arraste
     function doResize(e) {
-        if (isResizing) {
+        if (isResizing && currentResizeElement) {
             // Calculando a nova largura e altura
             const width = originalWidth + (e.clientX - originalMouseX);
             const height = originalHeight + (e.clientY - originalMouseY);
@@ -195,6 +221,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (height > 150) {
                 currentResizeElement.style.height = height + 'px';
+            }
+            
+            // Redimensionar o textarea para acompanhar o post-it
+            const textarea = currentResizeElement.querySelector('.postit-content');
+            adjustTextareaHeight(textarea, height);
+        }
+    }
+    
+    // Ajustar altura do textarea durante redimensionamento
+    function adjustTextareaHeight(textarea, containerHeight) {
+        if (textarea) {
+            const postit = textarea.closest('.postit');
+            const titleHeight = postit.querySelector('.postit-title').offsetHeight;
+            const headerHeight = postit.querySelector('.postit-header').offsetHeight;
+            const padding = 40; // Aumentado o padding para garantir espaço suficiente
+            
+            const newHeight = containerHeight - titleHeight - headerHeight - padding;
+            if (newHeight > 100) { // Mínimo de 100px
+                textarea.style.height = newHeight + 'px';
             }
         }
     }
@@ -389,6 +434,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         data.height || 200
                     );
                     postit.style.zIndex = data.zIndex || 1;
+                    
+                    // Ajustar o textarea para o tamanho correto após carregar
+                    const textarea = postit.querySelector('.postit-content');
+                    setTimeout(() => autoResizeTextarea(textarea), 0);
                 });
             }
             updateSaveFeedback('saved');
