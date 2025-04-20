@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const board = document.getElementById('board');
     const newPostitBtn = document.getElementById('new-postit');
+    const saveFeedback = document.querySelector('.save-feedback');
     let activePostit = null;
     let initialX;
     let initialY;
@@ -9,12 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let xOffset = 0;
     let yOffset = 0;
     let saveTimeout;
-    
-    // Criar elemento para feedback de salvamento
-    const saveFeedback = document.createElement('div');
-    saveFeedback.classList.add('save-feedback');
-    saveFeedback.textContent = 'Alterações salvas com sucesso!';
-    document.body.appendChild(saveFeedback);
+    let isResizing = false;
+    let currentResizeElement = null;
+    let originalWidth;
+    let originalHeight;
+    let originalMouseX;
+    let originalMouseY;
     
     // Carregar os post-its salvos no localStorage
     loadPostits();
@@ -31,13 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
         y = 50, 
         id = Date.now().toString(), 
         title = '',
-        colorClass = `color-${Math.floor(Math.random() * 5) + 1}`
+        colorClass = `color-${Math.floor(Math.random() * 5) + 1}`,
+        width = 200,
+        height = 200
     ) {
         const postit = document.createElement('div');
         postit.classList.add('postit', colorClass);
         postit.setAttribute('data-id', id);
         postit.style.left = `${x}px`;
         postit.style.top = `${y}px`;
+        postit.style.width = `${width}px`;
+        postit.style.height = `${height}px`;
         
         // Estrutura interna do post-it com título e seletor de cores
         postit.innerHTML = `
@@ -58,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <input type="text" class="postit-title" placeholder="Título do post-it" value="${title}">
             <textarea class="postit-content" placeholder="Escreva o que quiser aqui">${content}</textarea>
+            <div class="resize-handle"></div>
         `;
         
         // Adicionar post-it ao board
@@ -83,7 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Fechar o seletor de cores ao clicar fora
         document.addEventListener('click', () => {
-            colorOptions.classList.remove('show');
+            document.querySelectorAll('.color-options').forEach(menu => {
+                menu.classList.remove('show');
+            });
         });
         
         // Impedir que cliques no seletor de cores fechem o menu
@@ -97,6 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
             option.addEventListener('click', () => {
                 const newColor = option.getAttribute('data-color');
                 
+                // Salvar posição atual
+                const currentLeft = postit.style.left;
+                const currentTop = postit.style.top;
+                const currentWidth = postit.style.width;
+                const currentHeight = postit.style.height;
+                
                 // Remover classes de cor existentes
                 for (let i = 1; i <= 5; i++) {
                     postit.classList.remove(`color-${i}`);
@@ -104,6 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Adicionar a nova classe de cor
                 postit.classList.add(newColor);
+                
+                // Restaurar posição original
+                postit.style.left = currentLeft;
+                postit.style.top = currentTop;
+                postit.style.width = currentWidth;
+                postit.style.height = currentHeight;
                 
                 // Salvar alterações
                 savePostits();
@@ -126,14 +146,69 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Evento para foco
-        postit.addEventListener('mousedown', () => {
-            bringToFront(postit);
+        postit.addEventListener('mousedown', (e) => {
+            if (!isResizing) {
+                bringToFront(postit);
+            }
         });
+        
+        // Configurar redimensionamento
+        const resizeHandle = postit.querySelector('.resize-handle');
+        resizeHandle.addEventListener('mousedown', initResize);
         
         // Salvar estado
         savePostits();
         
         return postit;
+    }
+    
+    // Iniciar redimensionamento
+    function initResize(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        isResizing = true;
+        currentResizeElement = e.target.closest('.postit');
+        
+        originalWidth = parseFloat(getComputedStyle(currentResizeElement).getPropertyValue('width'));
+        originalHeight = parseFloat(getComputedStyle(currentResizeElement).getPropertyValue('height'));
+        originalMouseX = e.clientX;
+        originalMouseY = e.clientY;
+        
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+        
+        bringToFront(currentResizeElement);
+    }
+    
+    // Realizar redimensionamento durante o arraste
+    function doResize(e) {
+        if (isResizing) {
+            // Calculando a nova largura e altura
+            const width = originalWidth + (e.clientX - originalMouseX);
+            const height = originalHeight + (e.clientY - originalMouseY);
+            
+            // Verificando tamanhos mínimos
+            if (width > 150) {
+                currentResizeElement.style.width = width + 'px';
+            }
+            
+            if (height > 150) {
+                currentResizeElement.style.height = height + 'px';
+            }
+        }
+    }
+    
+    // Finalizar redimensionamento
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', doResize);
+        document.removeEventListener('mouseup', stopResize);
+        
+        if (currentResizeElement) {
+            savePostits();
+            currentResizeElement = null;
+        }
     }
     
     // Função para excluir um post-it
@@ -145,8 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funções para arrastar
     function dragStart(e) {
         if (e.target.classList.contains('postit-content') || 
+            e.target.classList.contains('postit-title') || 
             e.target.classList.contains('delete-btn') || 
-            e.target.classList.contains('postit-title')) {
+            e.target.classList.contains('color-btn') ||
+            e.target.classList.contains('resize-handle')) {
             return;
         }
         
@@ -233,37 +310,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Exibir feedback de salvamento
-    function showSaveFeedback() {
-        saveFeedback.classList.add('show');
+    function updateSaveFeedback(status = 'saved') {
+        saveFeedback.classList.remove('saving', 'error');
         
-        if (saveTimeout) {
-            clearTimeout(saveTimeout);
+        if (status === 'saving') {
+            saveFeedback.textContent = 'Salvando alterações...';
+            saveFeedback.classList.add('saving');
+        } else if (status === 'error') {
+            saveFeedback.textContent = 'Erro ao salvar! Tente novamente.';
+            saveFeedback.classList.add('error');
+        } else {
+            saveFeedback.textContent = 'Todas alterações salvas';
         }
-        
-        saveTimeout = setTimeout(() => {
-            saveFeedback.classList.remove('show');
-        }, 2000); // O feedback fica visível por 2 segundos
     }
     
     // Salvar post-its no localStorage com feedback
     function savePostits() {
-        const postits = document.querySelectorAll('.postit');
-        const postitData = [];
-        
-        postits.forEach(postit => {
-            postitData.push({
-                id: postit.getAttribute('data-id'),
-                title: postit.querySelector('.postit-title').value,
-                content: postit.querySelector('.postit-content').value,
-                x: parseInt(postit.style.left),
-                y: parseInt(postit.style.top),
-                zIndex: parseInt(postit.style.zIndex || 1),
-                color: getColorClass(postit)
+        try {
+            updateSaveFeedback('saving');
+            
+            const postits = document.querySelectorAll('.postit');
+            const postitData = [];
+            
+            postits.forEach(postit => {
+                postitData.push({
+                    id: postit.getAttribute('data-id'),
+                    title: postit.querySelector('.postit-title').value,
+                    content: postit.querySelector('.postit-content').value,
+                    x: parseInt(postit.style.left),
+                    y: parseInt(postit.style.top),
+                    zIndex: parseInt(postit.style.zIndex || 1),
+                    color: getColorClass(postit),
+                    width: parseInt(postit.style.width),
+                    height: parseInt(postit.style.height)
+                });
             });
-        });
-        
-        localStorage.setItem('postits', JSON.stringify(postitData));
-        showSaveFeedback();
+            
+            localStorage.setItem('postits', JSON.stringify(postitData));
+            
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+            
+            saveTimeout = setTimeout(() => {
+                updateSaveFeedback('saved');
+            }, 800);
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+            updateSaveFeedback('error');
+        }
     }
     
     // Obter classe de cor do post-it
@@ -278,20 +373,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Carregar post-its do localStorage
     function loadPostits() {
-        const savedPostits = JSON.parse(localStorage.getItem('postits'));
-        
-        if (savedPostits && savedPostits.length > 0) {
-            savedPostits.forEach(data => {
-                const postit = createNewPostit(
-                    data.content, 
-                    data.x, 
-                    data.y, 
-                    data.id, 
-                    data.title || '', 
-                    data.color || 'color-1'
-                );
-                postit.style.zIndex = data.zIndex || 1;
-            });
+        try {
+            const savedPostits = JSON.parse(localStorage.getItem('postits'));
+            
+            if (savedPostits && savedPostits.length > 0) {
+                savedPostits.forEach(data => {
+                    const postit = createNewPostit(
+                        data.content, 
+                        data.x, 
+                        data.y, 
+                        data.id, 
+                        data.title || '', 
+                        data.color || 'color-1',
+                        data.width || 200,
+                        data.height || 200
+                    );
+                    postit.style.zIndex = data.zIndex || 1;
+                });
+            }
+            updateSaveFeedback('saved');
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+            updateSaveFeedback('error');
         }
     }
 });

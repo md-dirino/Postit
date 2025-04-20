@@ -26,6 +26,12 @@ header {
     border-bottom: 1px solid #ddd;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 #new-postit {
     background-color: #4CAF50;
     color: white;
@@ -51,6 +57,7 @@ header {
     position: absolute;
     width: 200px;
     min-height: 200px;
+    min-width: 150px;
     padding: 15px;
     background-color: #ffeb3b;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -58,6 +65,8 @@ header {
     cursor: move;
     z-index: 1;
     transition: box-shadow 0.3s;
+    resize: both;
+    overflow: auto;
 }
 
 .postit:hover {
@@ -179,19 +188,41 @@ header {
 
 /* Estilo para o feedback de salvamento */
 .save-feedback {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
+    display: inline-block;
     background-color: rgba(76, 175, 80, 0.9);
     color: white;
-    padding: 10px 20px;
+    padding: 8px 15px;
     border-radius: 4px;
     font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-    z-index: 1000;
+    transition: all 0.3s ease-in-out;
 }
 
-.save-feedback.show {
-    opacity: 1;
+.save-feedback.saving {
+    background-color: rgba(255, 193, 7, 0.9);
+}
+
+.save-feedback.error {
+    background-color: rgba(244, 67, 54, 0.9);
+}
+
+/* Estilo para o alça de redimensionamento */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 15px;
+    height: 15px;
+    cursor: nwse-resize;
+    background: transparent;
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
 }
