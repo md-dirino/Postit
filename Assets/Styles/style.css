@@ -51,6 +51,7 @@ header {
     position: relative;
     width: 100%;
     height: calc(100vh - 100px);
+    font-family: 'Patrick Hand', cursive;
 }
 
 .postit {
